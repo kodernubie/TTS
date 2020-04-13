@@ -13,9 +13,11 @@ npm install
 
 4. Create your GOOGLE_APPLICATION_CREDENTIALS by following [Google Cloud Authentication](https://cloud.google.com/docs/authentication/getting-started) getting start information
 
-Save the json file using name : 'gcloudauth.json' 
+    Save the json file using name : 'gcloudauth.json' 
 
 5. Run application by double clicking 'START.bat'
+
+
 
 
 Or if you want complete prebuild app with nodejs, just contact me.
