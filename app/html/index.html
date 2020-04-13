@@ -1,0 +1,144 @@
+<html>
+<head>
+    <title>Text To Speech</title>
+    <link rel="stylesheet" href="picnic.min.css">
+
+    <script>
+
+        var maxLgt = 5000;
+
+        function init() {
+
+            var fileSelected = document.getElementById('txtfiletoread');
+            fileSelected.addEventListener('change', function (e) {
+                
+                document.getElementById("modal_1").checked = true;
+
+                setTimeout(() => {
+
+                    var fileTobeRead = fileSelected.files[0];
+                        
+                    var fileReader = new FileReader(); 
+                    fileReader.onload = function (e) { 
+                        var fileContents = document.getElementById('txtSumber'); 
+                        fileContents.value = fileReader.result; 
+                        document.getElementById("modal_1").checked = false;
+                    } 
+                    fileReader.readAsText(fileTobeRead);
+                }, 100);
+            }, false);
+        }
+
+        var info = "";
+        var sisa = "";
+        var id = "0";
+
+        function writeInfo(data) {
+
+            info += data + "<br>";
+            document.getElementById("info").innerHTML = info;
+        }
+
+        function convert() {
+        
+            writeInfo("Memulai konversi");
+
+            sisa = document.getElementById("txtSumber").value;
+
+            fetch("/init",
+            {
+                method: "POST",
+                headers : {
+						'Content-type' : 'application/json'
+                },
+                body : JSON.stringify( { mode : "init" } )
+            })
+            .then(function(res){ return res.json(); })
+            .then(function(data){ 
+                id = data.id;
+                writeInfo("File audio akan disimpan ke folder : " + id);
+                doConvert(); 
+            })
+        }
+
+        function doConvert() {
+
+            if (sisa.length > 0) {
+
+                var teks = sisa;
+
+                if (sisa.length > maxLgt) {
+
+                    pos = maxLgt - 1;
+
+                    while ((pos > 0) && ((sisa.charAt(pos) != ".") ||  (sisa.charAt(pos) != "!") ||  (sisa.charAt(pos) != "?"))) {
+
+                        pos--;
+                    }
+
+                    teks = sisa.substr(0, pos + 1);
+                    sisa = sisa.substr(pos + 1);
+                }
+                else
+                    sisa = "";
+
+                writeInfo("Mengkonversi " + teks.length + " karakter, sisa " + sisa.length + " karakter.....");
+
+                fetch("/convert",
+                {
+                    method: "POST",
+                    headers : {
+						'Content-type' : 'application/json'
+					},
+					body : JSON.stringify( { id : id, text : teks } )
+                })
+                .then(function(res){ return res.json(); })
+                .then(function(data){ 
+                    
+                    writeInfo("Audio file : <a href='" + data.link + "' target='_blank'>" + data.link + "</a>");
+                    
+                    doConvert(); 
+                })
+            }
+            else
+                writeInfo("=====SELESAI=====");
+        }
+    </script>
+</head>
+<body onload="init()">
+    <nav style="padding-top: 15px;">
+        Text To Speech
+    </nav>
+    <main style="margin-top: 70px; padding-left: 40px; padding-right: 40px; padding-top: 10px;">
+        <div class="flex">
+            <h5>Load teks dari file :</h5>
+            <input type="file" id="txtfiletoread" />
+        </div>
+        <br>
+        <h5 style="padding-bottom: 2px;">Atau ketik langsung teks :</h5>
+        <div class="flex">
+            <textarea style="height: 200px; font-size: 13px;" placeholder="Input teks disini" id="txtSumber"></textarea>
+        </div>
+        <div class="flex">
+            <button onclick="convert()">Convert</button>
+        </div>
+        <div id="info"></div>
+
+        <div class="modal">
+            <input id="modal_1" type="checkbox" />
+            <label for="modal_1" class="overlay"></label>
+            <article>
+                <header>
+                    <h3>Loading</h3>
+                </header>
+                <section class="content">
+                    Tunggu sebentar, sedang meload teks
+                </section>
+                <footer>
+                    &nbsp;
+                </footer>
+            </article>
+        </div>
+    </main>
+</body>
+</html>
